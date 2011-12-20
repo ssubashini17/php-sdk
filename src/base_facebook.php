@@ -699,10 +699,19 @@ abstract class BaseFacebook
     $params['api_key'] = $this->getAppId();
     $params['format'] = 'json-strings';
 
-    $result = json_decode($this->_oauthRequest(
+
+    $result = $this->_oauthRequest(
       $this->getApiUrl($params['method']),
       $params
-    ), true);
+    );
+
+	// Why this? Because "123123_123123" can be returned, invalid JSON
+	$tmp = json_decode($result, true);
+	if (!is_null($tmp)) {
+		$result = $tmp;
+	} else if (preg_match("~\"([0-9_]+)\"~", $result, $matches)) {
+		$result = $matches[1];
+	}
 
     // results are returned, errors are thrown
     if (is_array($result) && isset($result['error_code'])) {
@@ -734,10 +743,18 @@ abstract class BaseFacebook
     }
     $params['method'] = $method; // method override as we always do a POST
 
-    $result = json_decode($this->_oauthRequest(
+    $result = $this->_oauthRequest(
       $this->getUrl('graph', $path),
       $params
-    ), true);
+    );
+
+	// Why this? Because "123123_123123" can be returned, invalid JSON
+	$tmp = json_decode($result, true);
+	if (!is_null($tmp)) {
+		$result = $tmp;
+	} else if (preg_match("~\"([0-9_]+)\"~", $result, $matches)) {
+		$result = $matches[1];
+	}
 
     // results are returned, errors are thrown
     if (is_array($result) && isset($result['error'])) {
